@@ -1,0 +1,119 @@
+import yfinance as yf
+import pandas as pd
+
+
+symbol = "SASA.IS"
+
+
+start_date = '2020-12-07'
+end_date = '2023-01-13'
+
+
+data = yf.download(symbol, start=start_date, end=end_date)
+
+
+open_close_data = data[['Open', 'Close']]
+
+
+df = pd.DataFrame(open_close_data)
+
+
+print(df.head())
+df['Overnight_Return'] = (df['Open'] - df['Close'].shift(1)) / df['Close'].shift(1)
+
+
+df['Overnight_Return'].iloc[0] = 0
+
+
+print(df.head())
+
+mean_overnight_return = df['Overnight_Return'].mean()
+
+
+print(f"Gece Getiri Farklarının Ortalaması: {mean_overnight_return:.5f}")
+
+from datetime import datetime
+
+
+start_date = '2020-12-07'
+end_date = '2023-01-13'
+
+
+start_date = datetime.strptime(start_date, '%Y-%m-%d')
+end_date = datetime.strptime(end_date, '%Y-%m-%d')
+
+
+weeks = (end_date - start_date).days // 7
+
+print(f"Tarih aralığında toplam {weeks} hafta bulunmaktadır.")
+
+start_date = datetime.strptime(start_date, '%Y-%m-%d')
+end_date = datetime.strptime(end_date, '%Y-%m-%d')
+
+
+ctoiw_values = []
+
+
+current_date = start_date
+while current_date <= end_date:
+    
+    week_start = current_date - timedelta(days=current_date.weekday())
+    
+    
+    week_end = week_start + timedelta(days=6)
+    
+    
+    data = yf.download(symbol, start=week_start, end=week_end)
+    
+    
+    weekly_return = (data['Open'][0] - data['Close'][0]) / data['Close'][0]
+    ctoiw_values.append(weekly_return)
+    
+    
+    current_date = week_end + timedelta(days=1)
+
+
+ctoiw_df = pd.DataFrame({'CTOiw': ctoiw_values})
+
+
+print(ctoiw_df)
+
+max_ctoiw = ctoiw_df['CTOiw'].max()
+min_ctoiw = ctoiw_df['CTOiw'].min()
+
+
+print(f"Maximum CTOiw Değeri: {max_ctoiw:.6f}")
+print(f"Minimum CTOiw Değeri: {min_ctoiw:.6f}")
+
+ctoiw_df['Decile'] = pd.qcut(ctoiw_df['CTOiw'], 10, labels=False)
+
+
+print(ctoiw_df[['CTOiw', 'Decile']])
+
+ctoiw_df = pd.DataFrame({'CTOiw': ctoiw_values}, index=dates)
+
+
+ctoiw_table = ctoiw_df.resample('W').mean()
+print(ctoiw_table)
+
+
+plt.figure(figsize=(18, 8))
+
+
+plt.bar(ctoiw_df.index, ctoiw_df['CTOiw'], label='Haftalık CTOiw', alpha=0.7)
+
+
+plt.xlabel('Tarih')
+plt.ylabel('CTOiw')
+plt.title('Tarih Bazında Haftalık CTOiw Değerleri')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.xticks(rotation=45)
+
+plt.show()
+
+
+first_week_above_005 = ctoiw_df[ctoiw_df['CTOiw'] > 0.05].index.min()
+
+print(f"CTOiw'nin 0.05'in üstünde olduğu ilk haftanın tarihi: {first_week_above_005}")
